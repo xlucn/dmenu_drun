@@ -54,7 +54,7 @@ if __name__ == '__main__':
     args = get_args()
     apps = get_apps()
 
-    current_desktop = set(os.getenv('XDG_CURRENT_DESKTOP').split(':'))
+    current_desktop = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
 
     lines = []
     cmds = {}
