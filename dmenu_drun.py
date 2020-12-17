@@ -123,5 +123,7 @@ if __name__ == '__main__':
                  input='\n'.join(lines),
                  encoding='ascii')
 
-    if result.stdout != '':
+    if args.dry_run:
+        print(result.stdout)
+    elif result.stdout != '':
         run(cmds[result.stdout[:-1]], shell=True)
