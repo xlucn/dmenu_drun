@@ -66,61 +66,64 @@ def if_show(entry):
     return True
 
 
+def add_entry(entry):
+    Exec = entry.getExec()
+    Icon = entry.getIcon()
+    Name = entry.getName()
+    Terminal = entry.getTerminal()
+    GenericName = entry.getGenericName()
+    Categories = entry.getCategories()
+
+    line = Name
+
+    if GenericName and args.generic_name:
+        line += " ({generic_name})".format(generic_name=GenericName)
+
+    if Categories and args.categories:
+        line += " #{category}".format(category=';'.join(Categories))
+
+    cmd = Exec.replace(' %f', '') \
+              .replace(' %F', '') \
+              .replace(' %u', '') \
+              .replace(' %U', '') \
+              .replace('%c', Name) \
+              .replace('%k', entry.getPath())
+
+    if Icon:
+        cmd = cmd .replace('%i', "--icon {icon}".format(icon=Icon))
+
+    if Terminal:
+        cmd = "{terminal} -e {cmd}".format(terminal=args.terminal,
+                                           cmd=cmd)
+    if args.executable:
+        line += " $" + cmd
+
+    if Icon and args.dmenu.startswith("rofi"):
+        line += "\0icon\x1f{icon}".format(icon=Icon)
+
+    return cmd, line
+
+
 if __name__ == '__main__':
     args = get_args()
     apps = get_apps()
 
     current_desktops = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
 
+    entries = [DesktopEntry.DesktopEntry(app) for app in apps.values()]
+
     lines = []
     cmds = {}
-    for app in apps.values():
-        entry = DesktopEntry.DesktopEntry(app)
-        Exec = entry.getExec()
-        Icon = entry.getIcon()
-        Name = entry.getName()
-        Terminal = entry.getTerminal()
-        GenericName = entry.getGenericName()
-        Categories = entry.getCategories()
-
-        if not if_show(entry):
-            continue
-
-        line = Name
-
-        if GenericName and args.generic_name:
-            line += " ({generic_name})".format(generic_name=GenericName)
-
-        if Categories and args.categories:
-            line += " [{category}]".format(category=';'.join(Categories))
-
-        cmd = Exec.replace(' %f', '') \
-                  .replace(' %F', '') \
-                  .replace(' %u', '') \
-                  .replace(' %U', '') \
-                  .replace('%c', Name) \
-                  .replace('%k', app)
-
-        if Icon:
-            cmd = cmd .replace('%i', "--icon {icon}".format(icon=Icon))
-
-        if Terminal:
-            cmd = "{terminal} -e {cmd}".format(terminal=args.terminal,
-                                               cmd=cmd)
-        if args.executable:
-            line += " $" + cmd
-
-        cmds[line] = cmd
-
-        if Icon and args.dmenu.startswith("rofi"):
-            line += "\0icon\x1f{icon}".format(icon=Icon)
-
-        lines.append(line)
+    for entry in entries:
+        if if_show(entry):
+            cmd, line = add_entry(entry)
+            cmds[line] = cmd
+            lines.append(line)
 
     result = run(args.dmenu,
                  shell=True,
                  stdout=PIPE,
-                 input='\n'.join(lines),
+                 input='\n'.join(sorted(lines)),
                  encoding='ascii')
 
     if args.dry_run:
