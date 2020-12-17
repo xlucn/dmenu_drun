@@ -50,11 +50,27 @@ def get_apps():
     return apps
 
 
+def if_show(entry):
+    OnlyShowIn = entry.getOnlyShowIn()
+
+    if entry.getNoDisplay():
+        return False
+    if entry.getTryExec() and entry.findTryExec() is None:
+        return False
+    if set(entry.getNotShowIn()).intersection(current_desktops):
+        return False
+    if OnlyShowIn and not set(OnlyShowIn).intersection(current_desktops):
+        return False
+    if entry.getExec() is None:
+        return False
+    return True
+
+
 if __name__ == '__main__':
     args = get_args()
     apps = get_apps()
 
-    current_desktop = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
+    current_desktops = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
 
     lines = []
     cmds = {}
@@ -64,19 +80,10 @@ if __name__ == '__main__':
         Icon = entry.getIcon()
         Name = entry.getName()
         Terminal = entry.getTerminal()
-        TryExec = entry.getTryExec()
         GenericName = entry.getGenericName()
         Categories = entry.getCategories()
-        NoDisplay = entry.getNoDisplay()
-        OnlyShowIn = entry.getOnlyShowIn()
-        NotShowIn = entry.getNotShowIn()
 
-        if (NoDisplay or
-                Exec is None or
-                (TryExec and entry.findTryExec() is None) or
-                set(NotShowIn).intersection(current_desktop) or
-                (OnlyShowIn and
-                    not set(OnlyShowIn).intersection(current_desktop))):
+        if not if_show(entry):
             continue
 
         line = Name
