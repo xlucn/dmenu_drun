@@ -28,73 +28,87 @@ def get_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-    args = get_args()
-
-    current_desktop = set(os.getenv('XDG_CURRENT_DESKTOP').split(':'))
-
-    lines = []
-    cmds = {}
+def get_apps():
+    apps = {}
     for data_dir in BaseDirectory.xdg_data_dirs:
         app_dir = os.path.join(data_dir, 'applications')
         if not os.path.exists(app_dir) or not os.path.isdir(app_dir):
             continue
 
-        for app in os.listdir(app_dir):
-            if not app.endswith('.desktop'):
-                continue
+        # Desktop entry files can be in nested directories
+        for root, dirs, files in os.walk(app_dir):
+            for name in files:
+                if not name.endswith('.desktop'):
+                    continue
 
-            app_path = os.path.join(app_dir, app)
-            entry = DesktopEntry.DesktopEntry(app_path)
-            Exec = entry.getExec()
-            Icon = entry.getIcon()
-            Name = entry.getName()
-            Terminal = entry.getTerminal()
-            TryExec = entry.getTryExec()
-            GenericName = entry.getGenericName()
-            Categories = entry.getCategories()
-            NoDisplay = entry.getNoDisplay()
-            OnlyShowIn = entry.getOnlyShowIn()
-            NotShowIn = entry.getNotShowIn()
+                app = os.path.join(root, name)
+                app_id = os.path.relpath(app, app_dir).replace('/', '-')
 
-            if (NoDisplay or
-                    Exec is None or
-                    (TryExec and entry.findTryExec() is None) or
-                    set(NotShowIn).intersection(current_desktop) or
-                    (OnlyShowIn and
-                        not set(OnlyShowIn).intersection(current_desktop))):
-                continue
+                # Apps with the same id, choose the first
+                if apps.get(app_id) is None:
+                    apps[app_id] = app
+    return apps
 
-            line = Name
 
-            if GenericName and args.generic_name:
-                line += " ({generic_name})".format(generic_name=GenericName)
+if __name__ == '__main__':
+    args = get_args()
+    apps = get_apps()
 
-            if Categories and args.categories:
-                line += " [{category}]".format(category=';'.join(Categories))
+    current_desktop = set(os.getenv('XDG_CURRENT_DESKTOP').split(':'))
 
-            cmd = Exec.replace(' %f', '') \
-                      .replace(' %F', '') \
-                      .replace(' %u', '') \
-                      .replace(' %U', '') \
-                      .replace('%c', Name) \
-                      .replace('%k', app_path)
+    lines = []
+    cmds = {}
+    for app in apps.values():
+        entry = DesktopEntry.DesktopEntry(app)
+        Exec = entry.getExec()
+        Icon = entry.getIcon()
+        Name = entry.getName()
+        Terminal = entry.getTerminal()
+        TryExec = entry.getTryExec()
+        GenericName = entry.getGenericName()
+        Categories = entry.getCategories()
+        NoDisplay = entry.getNoDisplay()
+        OnlyShowIn = entry.getOnlyShowIn()
+        NotShowIn = entry.getNotShowIn()
 
-            if Icon:
-                cmd = cmd .replace('%i', "--icon {icon}".format(icon=Icon))
+        if (NoDisplay or
+                Exec is None or
+                (TryExec and entry.findTryExec() is None) or
+                set(NotShowIn).intersection(current_desktop) or
+                (OnlyShowIn and
+                    not set(OnlyShowIn).intersection(current_desktop))):
+            continue
 
-            if Terminal:
-                cmd = "{terminal} -e {cmd}".format(terminal=args.terminal,
-                                                   cmd=cmd)
-            if args.executable:
-                line += " $" + cmd
+        line = Name
 
-            cmds[line] = cmd
+        if GenericName and args.generic_name:
+            line += " ({generic_name})".format(generic_name=GenericName)
 
-            if Icon and args.dmenu.startswith("rofi"):
-                line += "\0icon\x1f{icon}".format(icon=Icon)
+        if Categories and args.categories:
+            line += " [{category}]".format(category=';'.join(Categories))
 
-            lines.append(line)
+        cmd = Exec.replace(' %f', '') \
+                  .replace(' %F', '') \
+                  .replace(' %u', '') \
+                  .replace(' %U', '') \
+                  .replace('%c', Name) \
+                  .replace('%k', app)
+
+        if Icon:
+            cmd = cmd .replace('%i', "--icon {icon}".format(icon=Icon))
+
+        if Terminal:
+            cmd = "{terminal} -e {cmd}".format(terminal=args.terminal,
+                                               cmd=cmd)
+        if args.executable:
+            line += " $" + cmd
+
+        cmds[line] = cmd
+
+        if Icon and args.dmenu.startswith("rofi"):
+            line += "\0icon\x1f{icon}".format(icon=Icon)
+
+        lines.append(line)
 
     result = run(args.dmenu,
                  shell=True,
