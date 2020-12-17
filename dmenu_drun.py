@@ -46,38 +46,44 @@ if __name__ == '__main__':
 
             app_path = os.path.join(app_dir, app)
             entry = DesktopEntry.DesktopEntry(app_path)
-            if (entry.getNoDisplay() or entry.getExec() is None or
-                    (entry.getTryExec() and entry.findTryExec() is None) or
-                    set(entry.getNotShowIn()).intersection(current_desktop)):
-                continue
-
-            OnlyShowIn = set(entry.getOnlyShowIn())
-            if OnlyShowIn and not OnlyShowIn.intersection(current_desktop):
-                continue
-
+            Exec = entry.getExec()
+            Icon = entry.getIcon()
             Name = entry.getName()
+            Terminal = entry.getTerminal()
+            TryExec = entry.getTryExec()
+            GenericName = entry.getGenericName()
+            Categories = entry.getCategories()
+            NoDisplay = entry.getNoDisplay()
+            OnlyShowIn = entry.getOnlyShowIn()
+            NotShowIn = entry.getNotShowIn()
+
+            if (NoDisplay or
+                    Exec is None or
+                    (TryExec and entry.findTryExec() is None) or
+                    set(NotShowIn).intersection(current_desktop) or
+                    (OnlyShowIn and
+                        not set(OnlyShowIn).intersection(current_desktop))):
+                continue
+
             line = Name
 
-            GenericName = entry.getGenericName()
             if GenericName and args.generic_name:
                 line += " ({generic_name})".format(generic_name=GenericName)
 
-            Categories = entry.getCategories()
             if Categories and args.categories:
                 line += " [{category}]".format(category=';'.join(Categories))
 
-            cmd = entry.getExec().replace(' %f', '') \
-                                 .replace(' %F', '') \
-                                 .replace(' %u', '') \
-                                 .replace(' %U', '') \
-                                 .replace('%c', Name) \
-                                 .replace('%k', app_path)
+            cmd = Exec.replace(' %f', '') \
+                      .replace(' %F', '') \
+                      .replace(' %u', '') \
+                      .replace(' %U', '') \
+                      .replace('%c', Name) \
+                      .replace('%k', app_path)
 
-            Icon = entry.getIcon()
             if Icon:
                 cmd = cmd .replace('%i', "--icon {icon}".format(icon=Icon))
 
-            if entry.getTerminal():
+            if Terminal:
                 cmd = "{terminal} -e {cmd}".format(terminal=args.terminal,
                                                    cmd=cmd)
             if args.executable:
