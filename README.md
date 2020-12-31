@@ -10,20 +10,22 @@ As you can guess from the name, this script is `dmenu_run` counter-part for desk
 ## Usage
 
 ```
-usage: dmenu_drun.py [-h] [-c] [-e] [-g] [-n] [-x] [-d dmenu_cmd] [-t terminal]
+dmenu_drun.py [-h] [-c] [-x] [-g] [-N] [-e] [-d dmenu_cmd] [-t terminal]
 
 optional arguments:
   -h, --help            show this help message and exit
   -c, --categories      Show category names
-  -e, --executable      Show command line
+  -x, --executable      Show command line
   -g, --generic-name    Show generic name for apps
-  -n, --dry-run         Do not run app, output to stdout
-  -x, --xdg-de          Show apps for specific desktop environments
+  -N, --dry-run         Do not run app, output to stdout
+  -e, --xdg-de          Show apps for specific desktop environments
   -d dmenu_cmd, --dmenu dmenu_cmd
                         Customize dmenu command, default is dmenu -i -l 10 -p drun
   -t terminal, --terminal terminal
                         Terminal emulator to run text based programs, default is xterm
 ```
+
+Note: all unknown arguments (not listed above) are passed to `dmenu`, so instead of specify `-d "dmenu -p prompt"`, you can use `-p prompt` directly.
 
 ## Features
 

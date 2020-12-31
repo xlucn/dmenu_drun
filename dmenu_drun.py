@@ -7,16 +7,21 @@ from xdg import BaseDirectory, DesktopEntry
 
 
 def get_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+            description='Use dmenu to launch desktop applications',
+            epilog='Note: Other than the options descibed here, all the dmenu '
+            'options can be passed to dmenu_drun as well, especially if you '
+            'want to specify -d option with arguments containing spaces. '
+            'Recommend to use -d option to use dmenu alternatives like rofi.')
     parser.add_argument('-c', '--categories', action='store_true',
                         help='Show category names')
-    parser.add_argument('-e', '--executable', action='store_true',
+    parser.add_argument('-x', '--executable', action='store_true',
                         help='Show command line')
     parser.add_argument('-g', '--generic-name', action='store_true',
                         help='Show generic name for apps')
-    parser.add_argument('-n', '--dry-run', action='store_true',
+    parser.add_argument('-N', '--dry-run', action='store_true',
                         help='Do not run app, output to stdout')
-    parser.add_argument('-x', '--xdg-de', action='store_true',
+    parser.add_argument('-e', '--xdg-de', action='store_true',
                         help='Show apps for specific desktop environments')
     parser.add_argument('-d', '--dmenu', metavar='dmenu_cmd',
                         default='dmenu -i -l 10 -p drun',
@@ -25,7 +30,7 @@ def get_args():
                         default='xterm',
                         help='Terminal emulator to run text based programs, '
                         'default is %(default)s')
-    return parser.parse_args()
+    return parser.parse_known_args()
 
 
 def get_apps():
@@ -105,7 +110,7 @@ def add_entry(entry):
 
 
 if __name__ == '__main__':
-    args = get_args()
+    args, dmenu_args = get_args()
     apps = get_apps()
 
     current_desktops = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
@@ -120,8 +125,7 @@ if __name__ == '__main__':
             cmds[line] = cmd
             lines.append(line)
 
-    result = run(args.dmenu,
-                 shell=True,
+    result = run([*args.dmenu.split(), *dmenu_args],
                  stdout=PIPE,
                  input='\n'.join(sorted(lines)),
                  encoding='ascii')
