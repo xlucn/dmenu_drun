@@ -9,7 +9,7 @@ from xdg import BaseDirectory, DesktopEntry
 def get_args():
     parser = argparse.ArgumentParser(
             description='Use dmenu to launch desktop applications',
-            epilog='Note: Other than the options descibed here, all the dmenu '
+            epilog='Note: Other than the options described here, all the dmenu '
             'options can be passed to dmenu_drun as well, especially if the '
             'dmenu arguments have spaces. "-d" option is only recommended to '
             'specify dmenu alternatives like rofi.')
