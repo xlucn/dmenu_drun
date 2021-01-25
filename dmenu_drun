@@ -10,9 +10,9 @@ def get_args():
     parser = argparse.ArgumentParser(
             description='Use dmenu to launch desktop applications',
             epilog='Note: Other than the options descibed here, all the dmenu '
-            'options can be passed to dmenu_drun as well, especially if you '
-            'want to specify -d option with arguments containing spaces. '
-            'Recommend to use -d option to use dmenu alternatives like rofi.')
+            'options can be passed to dmenu_drun as well, especially if the '
+            'dmenu arguments have spaces. "-d" option is only recommended to '
+            'specify dmenu alternatives like rofi.')
     parser.add_argument('-c', '--categories', action='store_true',
                         help='Show category names')
     parser.add_argument('-x', '--executable', action='store_true',
