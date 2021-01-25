@@ -56,14 +56,13 @@ def get_apps():
 
 
 def if_show(entry):
-    OnlyShowIn = entry.getOnlyShowIn()
-
     if entry.getNoDisplay():
         return False
     if entry.getTryExec() and entry.findTryExec() is None:
         return False
     if set(entry.getNotShowIn()).intersection(current_desktops):
         return False
+    OnlyShowIn = entry.getOnlyShowIn()
     if OnlyShowIn and not set(OnlyShowIn).intersection(current_desktops):
         return False
     if entry.getExec() is None:
@@ -95,18 +94,18 @@ def add_entry(entry):
               .replace('%k', entry.getPath())
 
     if Icon:
-        cmd = cmd .replace('%i', "--icon {icon}".format(icon=Icon))
+        cmd = cmd.replace('%i', "--icon {icon}".format(icon=Icon))
 
     if Terminal:
-        cmd = "{terminal} -e {cmd}".format(terminal=args.terminal,
-                                           cmd=cmd)
+        cmd = "{terminal} -e {cmd}".format(terminal=args.terminal, cmd=cmd)
+
     if args.executable:
         line += " $" + cmd
 
     if Icon and args.dmenu.startswith("rofi"):
         line += "\0icon\x1f{icon}".format(icon=Icon)
 
-    return cmd, line
+    return {line: cmd}
 
 
 if __name__ == '__main__':
@@ -115,15 +114,13 @@ if __name__ == '__main__':
 
     current_desktops = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
 
-    entries = [DesktopEntry.DesktopEntry(app) for app in apps.values()]
-
-    lines = []
     cmds = {}
-    for entry in entries:
+    for app in apps.values():
+        entry = DesktopEntry.DesktopEntry(app)
         if if_show(entry):
-            cmd, line = add_entry(entry)
-            cmds[line] = cmd
-            lines.append(line)
+            cmds.update(add_entry(entry))
+
+    lines = cmds.keys()
 
     result = run([*args.dmenu.split(), *dmenu_args],
                  stdout=PIPE,
