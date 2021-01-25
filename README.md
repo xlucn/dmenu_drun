@@ -29,11 +29,12 @@ Note: all unknown arguments (not listed above) are passed to `dmenu`, so instead
 
 ## Features
 
-- Rather fast loading (less than 0.1s should be negligible for majorities)
+- Fast enough loading (less than 0.1s should be negligible for most)
 - Options to show categories, generic name and command. This can let you match more info.
 - You can customize `dmenu` command as you like
-  - If using `rofi -dmenu` as `dmenu` replacement, it will show icons! However, that seems just like `rofi -show drun`, why not reinvent some wheels, right?
+  - If using `rofi -dmenu` as `dmenu` replacement, it will show icons! However, that seems just like `rofi -show drun`. Why not reinvent some wheels, right?
 - Considers lots of freedesktop standards (to decide whether to show an app)
 
 TODO:
 - Parse .menu and .directory files
+- tabulate output for dmenu
