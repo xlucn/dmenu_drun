@@ -125,7 +125,7 @@ if __name__ == '__main__':
     result = run([*args.dmenu.split(), *dmenu_args],
                  stdout=PIPE,
                  input='\n'.join(sorted(lines)),
-                 encoding='ascii')
+                 encoding='utf-8')
 
     if args.dry_run:
         print(result.stdout)
