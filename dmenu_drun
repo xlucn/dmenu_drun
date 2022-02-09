@@ -152,9 +152,10 @@ if __name__ == '__main__':
     lines = '\n'.join(sorted(cmds.keys()))
 
     result = run(dmenu_cmd, input=lines, stdout=PIPE, encoding='utf-8')
-    command = cmds[result.stdout[:-1]]
+    if result.returncode == 0:
+        command = cmds[result.stdout[:-1]]
 
-    if args.dry_run:
-        print(command)
-    elif result.stdout != '':
-        run(command, shell=True)
+        if args.dry_run:
+            print(command)
+        elif result.stdout != '':
+            run(command, shell=True)
