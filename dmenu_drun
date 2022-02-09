@@ -56,7 +56,9 @@ def get_apps():
 
 
 def if_show(entry):
-    if entry.getNoDisplay():
+    if entry.getType() != "Application":
+        return False
+    if entry.getNoDisplay() or entry.getHidden():
         return False
     if entry.getTryExec() and entry.findTryExec() is None:
         return False
