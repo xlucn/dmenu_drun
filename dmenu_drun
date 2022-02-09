@@ -1,8 +1,8 @@
 #!/usr/bin/env python
+# Ref: https://specifications.freedesktop.org/desktop-entry-spec
 import os
 import argparse
 from subprocess import run, PIPE
-
 from xdg import BaseDirectory, DesktopEntry
 
 
@@ -52,7 +52,7 @@ def get_apps():
                 # Apps with the same id, choose the first
                 if apps.get(app_id) is None:
                     apps[app_id] = app
-    return apps
+    return apps.values()
 
 
 def if_show(entry):
@@ -103,31 +103,28 @@ def add_entry(entry):
         line += " $" + cmd
 
     if Icon and args.dmenu.startswith("rofi"):
-        line += "\0icon\x1f{icon}".format(icon=Icon)
+        line += f"\0icon\x1f{Icon}"
 
     return {line: cmd}
 
 
 if __name__ == '__main__':
-    args, dmenu_args = get_args()
-    apps = get_apps()
-
     current_desktops = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
 
+    args, dmenu_args = get_args()
+    dmenu_cmd = args.dmenu.split()
+    dmenu_cmd.extend(dmenu_args)
+
     cmds = {}
-    for app in apps.values():
+    for app in get_apps():
         entry = DesktopEntry.DesktopEntry(app)
         if if_show(entry):
             cmds.update(add_entry(entry))
+    lines = '\n'.join(sorted(cmds.keys()))
 
-    lines = cmds.keys()
-
-    result = run([*args.dmenu.split(), *dmenu_args],
-                 stdout=PIPE,
-                 input='\n'.join(sorted(lines)),
-                 encoding='utf-8')
+    result = run(dmenu_cmd, input=lines, stdout=PIPE, encoding='utf-8')
 
     if args.dry_run:
-        print(result.stdout)
+        print(result.stdout.strip())
     elif result.stdout != '':
         run(cmds[result.stdout[:-1]], shell=True)
