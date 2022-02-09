@@ -4,25 +4,29 @@ As you can guess from the name, this script is `dmenu_run` counter-part for desk
 
 ## Requirements
 
-- `dmenu`
+- `dmenu` or alternatives like `rofi`
 - `pyxdg` module
 
 ## Usage
 
 ```
-dmenu_drun.py [-h] [-c] [-x] [-g] [-N] [-e] [-d dmenu_cmd] [-t terminal]
+usage: dmenu_drun [-hcCegkNxX] [-d dmenu_cmd] [-t terminal]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -c, --categories      Show category names
-  -x, --executable      Show command line
-  -g, --generic-name    Show generic name for apps
-  -N, --dry-run         Do not run app, output to stdout
-  -e, --xdg-de          Show apps for specific desktop environments
+  -c, --categories      Show main category names
+  -C, --all-categories  Show all category names
   -d dmenu_cmd, --dmenu dmenu_cmd
                         Customize dmenu command, default is dmenu -i -l 10 -p drun
+  -e, --xdg-de          Show apps despite only for specific desktop environments
+  -g, --generic-name    Show generic name for apps
+  -k, --keywords        Show keywords
+  -N, --dry-run         Do not run app, output to stdout
   -t terminal, --terminal terminal
-                        Terminal emulator to run text based programs, default is xterm
+                        Terminal emulator to use, default is xterm
+  -x, --executable      Show executable name
+  -X, --fullcmd         Show command line
+
 ```
 
 Note: all unknown arguments (not listed above) are passed to `dmenu`, so instead of specify `-d "dmenu -p prompt"`, you can use `-p prompt` directly.
