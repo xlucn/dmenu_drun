@@ -36,7 +36,7 @@ options:
   -X, --fullcmd         Show command line
 ```
 
-Note: all unknown arguments (not listed above) are passed to `dmenu`, so instead of specify `-d "dmenu -p prompt"`, you can use `-p prompt` directly.
+Note: all unknown arguments (not listed above) are passed to `dmenu`, so instead of specify `dmenu_drun -d "dmenu -p prompt"`, you can use `dmenu_drun -p prompt` directly.
 
 TODO:
 - Parse .menu and .directory files
