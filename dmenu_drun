@@ -5,6 +5,22 @@ import argparse
 from subprocess import run, PIPE
 from xdg import BaseDirectory, DesktopEntry
 
+categories = [
+    "AudioVideo",
+    "Audio",
+    "Video",
+    "Development",
+    "Education",
+    "Game",
+    "Graphics",
+    "Network",
+    "Office",
+    "Science",
+    "Settings",
+    "System",
+    "Utility",
+]
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -14,22 +30,27 @@ def get_args():
             'dmenu arguments have spaces. "-d" option is only recommended to '
             'specify dmenu alternatives like rofi.')
     parser.add_argument('-c', '--categories', action='store_true',
-                        help='Show category names')
-    parser.add_argument('-x', '--executable', action='store_true',
-                        help='Show command line')
-    parser.add_argument('-g', '--generic-name', action='store_true',
-                        help='Show generic name for apps')
-    parser.add_argument('-N', '--dry-run', action='store_true',
-                        help='Do not run app, output to stdout')
-    parser.add_argument('-e', '--xdg-de', action='store_true',
-                        help='Show apps for specific desktop environments')
+                        help='Show main category names')
+    parser.add_argument('-C', '--all-categories', action='store_true',
+                        help='Show all category names')
     parser.add_argument('-d', '--dmenu', metavar='dmenu_cmd',
                         default='dmenu -i -l 10 -p drun',
                         help='Customize dmenu command, default is %(default)s')
+    parser.add_argument('-e', '--xdg-de', action='store_true',
+                        help='Show apps for specific desktop environments')
+    parser.add_argument('-g', '--generic-name', action='store_true',
+                        help='Show generic name for apps')
+    parser.add_argument('-k', '--keywords', action='store_true',
+                        help='Show keywords')
+    parser.add_argument('-N', '--dry-run', action='store_true',
+                        help='Do not run app, output to stdout')
     parser.add_argument('-t', '--terminal', metavar='terminal',
                         default='xterm',
-                        help='Terminal emulator to run text based programs, '
-                        'default is %(default)s')
+                        help='Terminal emulator to use, default is %(default)s')
+    parser.add_argument('-x', '--executable', action='store_true',
+                        help='Show executable name')
+    parser.add_argument('-X', '--fullcmd', action='store_true',
+                        help='Show command line')
     return parser.parse_known_args()
 
 
@@ -76,34 +97,40 @@ def add_entry(entry):
     Exec = entry.getExec()
     Icon = entry.getIcon()
     Name = entry.getName()
+    Path = entry.getPath()
+    Keys = entry.getKeywords()
     Terminal = entry.getTerminal()
     GenericName = entry.getGenericName()
     Categories = entry.getCategories()
 
     line = Name
-
     if GenericName and args.generic_name:
-        line += " ({generic_name})".format(generic_name=GenericName)
+        line += f" ({GenericName})"
+    if Categories:
+        if args.all_categories:
+            line += " @{category}".format(category=';'.join(Categories))
+        elif args.categories:
+            category = [c for c in Categories if c in categories][0]
+            line += f" @{category}"
+    if Exec:
+        exe = Exec.split()[0].split('/')[-1]
+        cmd = Exec.replace(' %f', '') \
+                  .replace(' %F', '') \
+                  .replace(' %u', '') \
+                  .replace(' %U', '') \
+                  .replace('%c', Name) \
+                  .replace('%k', Path)
+        if Icon:
+            cmd = cmd.replace('%i', f"--icon {Icon}")
+        if Terminal:
+            cmd = f"{args.terminal} -e {cmd}"
 
-    if Categories and args.categories:
-        line += " #{category}".format(category=';'.join(Categories))
-
-    cmd = Exec.replace(' %f', '') \
-              .replace(' %F', '') \
-              .replace(' %u', '') \
-              .replace(' %U', '') \
-              .replace('%c', Name) \
-              .replace('%k', entry.getPath())
-
-    if Icon:
-        cmd = cmd.replace('%i', "--icon {icon}".format(icon=Icon))
-
-    if Terminal:
-        cmd = "{terminal} -e {cmd}".format(terminal=args.terminal, cmd=cmd)
-
-    if args.executable:
-        line += " $" + cmd
-
+        if args.fullcmd:
+            line += f" ${cmd}"
+        elif args.executable:
+            line += f" ${exe}"
+    if Keys and args.keywords:
+        line += " #{keys}".format(keys=';'.join(Keys))
     if Icon and args.dmenu.startswith("rofi"):
         line += f"\0icon\x1f{Icon}"
 
