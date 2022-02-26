@@ -2,8 +2,8 @@
 # Ref: https://specifications.freedesktop.org/desktop-entry-spec
 import os
 import argparse
+from configparser import RawConfigParser
 from subprocess import run, PIPE
-from xdg import BaseDirectory, DesktopEntry
 
 categories = [
     "AudioVideo",
@@ -56,7 +56,9 @@ def get_args():
 
 def get_apps():
     apps = {}
-    for data_dir in BaseDirectory.xdg_data_dirs:
+    XDG_DATA_HOME = os.path.join(os.getenv("HOME"), ".local", "share")
+    XDG_DATA_DIRS = [XDG_DATA_HOME, "/usr/local/share", "/usr/share"]
+    for data_dir in XDG_DATA_DIRS:
         app_dir = os.path.join(data_dir, 'applications')
         if not os.path.exists(app_dir) or not os.path.isdir(app_dir):
             continue
@@ -77,50 +79,51 @@ def get_apps():
 
 
 def if_show(entry):
-    if entry.getExec() is None:
+    if entry.get('Exec') is None:
         return False
-    if entry.getType() != "Application":
+    if entry.get('Type') != "Application":
         return False
-    if entry.getNoDisplay() or entry.getHidden():
+    if entry.get('NoDisplay') == 'true' or entry.get('Hidden') == 'true':
         return False
-    if entry.getTryExec() and entry.findTryExec() is None:
-        return False
+    # if entry.get('TryExec') and entry.findTryExec() is None:
+    #     return False
     if not args.xdg_de:
-        if set(entry.getNotShowIn()).intersection(current_desktops):
+        NotShowIn = entry.get('NotShowIn')
+        if NotShowIn and len(set(NotShowIn.split(';')).intersection(current_desktops)) > 0:
             return False
-        OnlyShowIn = entry.getOnlyShowIn()
-        if OnlyShowIn and not set(OnlyShowIn).intersection(current_desktops):
+        OnlyShowIn = entry.get('OnlyShowIn')
+        if OnlyShowIn and len(set(OnlyShowIn.split(';')).intersection(current_desktops)) == 0:
             return False
     return True
 
 
 def add_entry(entry):
-    Exec = entry.getExec()
-    Icon = entry.getIcon()
-    Name = entry.getName()
-    Path = entry.getPath()
-    Keys = entry.getKeywords()
-    Terminal = entry.getTerminal()
-    GenericName = entry.getGenericName()
-    Categories = entry.getCategories()
+    Exec = entry.get('Exec')
+    Icon = entry.get('Icon')
+    Name = entry.get('Name')
+    Path = entry.get('Path')
+    Keys = entry.get('Keywords')
+    Terminal = entry.get('Terminal') == 'true'
+    GenericName = entry.get('GenericName')
+    Categories = entry.get('Categories')
 
     line = Name
     if GenericName and args.generic_name:
         line += f" ({GenericName})"
     if Categories:
         if args.all_categories:
-            line += " @{category}".format(category=';'.join(Categories))
+            line += f" @{Categories}"
         elif args.categories:
-            category = [c for c in Categories if c in categories][0]
+            category = [c for c in Categories.split(';') if c in categories][0]
             line += f" @{category}"
     if Exec:
         exe = Exec.split()[0].split('/')[-1]
-        cmd = Exec.replace(' %f', '') \
-                  .replace(' %F', '') \
-                  .replace(' %u', '') \
-                  .replace(' %U', '') \
+        cmd = Exec.replace('%f', '') \
+                  .replace('%F', '') \
+                  .replace('%u', '') \
+                  .replace('%U', '') \
                   .replace('%c', Name) \
-                  .replace('%k', Path)
+                  .replace('%k', Path if Path else '')
         if Icon:
             cmd = cmd.replace('%i', f"--icon {Icon}")
         if Terminal:
@@ -131,7 +134,7 @@ def add_entry(entry):
         elif args.executable:
             line += f" ${exe}"
     if Keys and args.keywords:
-        line += " #{keys}".format(keys=';'.join(Keys))
+        line += f" #{Keys}"
     if Icon and args.dmenu.startswith("rofi"):
         line += f"\0icon\x1f{Icon}"
 
@@ -139,15 +142,22 @@ def add_entry(entry):
 
 
 if __name__ == '__main__':
-    current_desktops = set(os.getenv('XDG_CURRENT_DESKTOP', '').split(':'))
+    current_desktops = os.getenv('XDG_CURRENT_DESKTOP')
+    if current_desktops:
+        current_desktops = set(current_desktops.split(':'))
+    else:
+        current_desktops = set()
 
     args, dmenu_args = get_args()
     dmenu_cmd = args.dmenu.split()
     dmenu_cmd.extend(dmenu_args)
 
     cmds = {}
+    parser = RawConfigParser()
     for app in get_apps():
-        entry = DesktopEntry.DesktopEntry(app)
+        parser.clear()
+        parser.read(app)
+        entry = parser['Desktop Entry']
         if if_show(entry):
             cmds.update(add_entry(entry))
     lines = '\n'.join(sorted(cmds.keys()))

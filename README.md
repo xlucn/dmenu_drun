@@ -10,11 +10,6 @@ As you can guess from the name, this script is `dmenu_run` counter-part for desk
   - If using `rofi -dmenu` as `dmenu` replacement, it will show icons! However, that seems just like `rofi -show drun`. Why not reinvent some wheels, right?
 - Considers lots of freedesktop specifications.
 
-## Requirements
-
-- `dmenu` or alternatives like `rofi`
-- `pyxdg` module
-
 ## Usage
 
 ```
