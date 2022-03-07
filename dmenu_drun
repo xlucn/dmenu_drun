@@ -2,7 +2,6 @@
 # Ref: https://specifications.freedesktop.org/desktop-entry-spec
 import os
 import argparse
-from configparser import RawConfigParser
 from subprocess import run, PIPE
 
 categories = [
@@ -52,6 +51,22 @@ def get_args():
     parser.add_argument('-X', '--fullcmd', action='store_true',
                         help='Show command line')
     return parser.parse_known_args()
+
+
+def ini_parse(inifile):
+    content = {}
+    section = None
+
+    for line in open(inifile):
+        line = line.strip()
+        if len(line) > 2 and line[0] == '[' and line[-1] == ']':
+            section = line[1:-1]
+            content[section] = {}
+        elif line.find("=") >= 0 and section:
+            key, sep, value = line.partition("=")
+            content[section][key.strip()] = value.strip()
+
+    return content
 
 
 def get_apps():
@@ -153,11 +168,8 @@ if __name__ == '__main__':
     dmenu_cmd.extend(dmenu_args)
 
     cmds = {}
-    parser = RawConfigParser()
     for app in get_apps():
-        parser.clear()
-        parser.read(app)
-        entry = parser['Desktop Entry']
+        entry = ini_parse(app)['Desktop Entry']
         if if_show(entry):
             cmds.update(add_entry(entry))
     lines = '\n'.join(sorted(cmds.keys()))
