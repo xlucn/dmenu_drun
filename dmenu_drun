@@ -35,8 +35,8 @@ def get_args():
     parser.add_argument('-d', '--dmenu', metavar='dmenu_cmd',
                         default='dmenu -i -l 10 -p drun',
                         help='Customize dmenu command, default is %(default)s')
-    parser.add_argument('-e', '--xdg-de', action='store_true',
-                        help='Show apps despite only for specific desktop environments')
+    parser.add_argument('-E', '--ignore-de', action='store_true',
+                        help='Show all apps despite desktop environments')
     parser.add_argument('-g', '--generic-name', action='store_true',
                         help='Show generic name for apps')
     parser.add_argument('-k', '--keywords', action='store_true',
@@ -106,7 +106,7 @@ def if_show(entry):
         return False
     # if entry.get('TryExec') and entry.findTryExec() is None:
     #     return False
-    if not args.xdg_de:
+    if not args.ignore_de:
         NotShowIn = entry.get('NotShowIn')
         if NotShowIn and len(set(NotShowIn.split(';')).intersection(current_desktops)) > 0:
             return False
