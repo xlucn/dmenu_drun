@@ -77,7 +77,7 @@ def get_apps():
     XDG_DATA_DIRS = XDG_DATA_DIRS.split(":")
 
     apps = {}
-    for data_dir in [*XDG_DATA_DIRS, XDG_DATA_HOME]:
+    for data_dir in [XDG_DATA_HOME, *XDG_DATA_DIRS]:
         app_dir = os.path.join(data_dir, 'applications')
         if not os.path.exists(app_dir) or not os.path.isdir(app_dir):
             continue
