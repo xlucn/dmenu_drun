@@ -57,7 +57,8 @@ def get_args():
 def get_apps():
     apps = {}
     XDG_DATA_HOME = os.path.join(os.getenv("HOME"), ".local", "share")
-    XDG_DATA_DIRS = [XDG_DATA_HOME, "/usr/local/share", "/usr/share"]
+    XDG_DATA_DIRS = [XDG_DATA_HOME, "/usr/local/share", "/usr/share",
+                     "/var/lib/flatpak/exports/share"]
     for data_dir in XDG_DATA_DIRS:
         app_dir = os.path.join(data_dir, 'applications')
         if not os.path.exists(app_dir) or not os.path.isdir(app_dir):
