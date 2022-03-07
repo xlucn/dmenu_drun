@@ -70,10 +70,13 @@ def ini_parse(inifile):
 
 
 def get_apps():
-    apps = {}
     XDG_DATA_HOME = os.path.join(os.getenv("HOME"), ".local", "share")
-    XDG_DATA_DIRS = [XDG_DATA_HOME, "/usr/local/share", "/usr/share"]
-    for data_dir in XDG_DATA_DIRS:
+    XDG_DATA_HOME = os.getenv("XDG_DATA_HOME", XDG_DATA_HOME)
+    XDG_DATA_DIRS = os.getenv("XDG_DATA_DIRS", "/usr/share:/usr/local/share")
+    XDG_DATA_DIRS = XDG_DATA_DIRS.split(":")
+
+    apps = {}
+    for data_dir in [*XDG_DATA_DIRS, XDG_DATA_HOME]:
         app_dir = os.path.join(data_dir, 'applications')
         if not os.path.exists(app_dir) or not os.path.isdir(app_dir):
             continue
@@ -90,6 +93,7 @@ def get_apps():
                 # Apps with the same id, choose the first
                 if apps.get(app_id) is None:
                     apps[app_id] = app
+
     return apps.values()
 
 
