@@ -2,6 +2,7 @@
 # Ref: https://specifications.freedesktop.org/desktop-entry-spec
 import os
 import argparse
+import shutil
 from subprocess import run, PIPE
 
 categories = [
@@ -104,8 +105,8 @@ def if_show(entry):
         return False
     if entry.get('NoDisplay') == 'true' or entry.get('Hidden') == 'true':
         return False
-    # if entry.get('TryExec') and entry.findTryExec() is None:
-    #     return False
+    if entry.get('TryExec') and shutil.which(entry.get('TryExec')):
+        return False
     if not args.ignore_de:
         NotShowIn = entry.get('NotShowIn')
         if NotShowIn and len(set(NotShowIn.split(';')).intersection(current_desktops)) > 0:
