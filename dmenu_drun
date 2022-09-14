@@ -105,7 +105,7 @@ def if_show(entry):
         return False
     if entry.get('NoDisplay') == 'true' or entry.get('Hidden') == 'true':
         return False
-    if entry.get('TryExec') and shutil.which(entry.get('TryExec')):
+    if entry.get('TryExec') and shutil.which(entry.get('TryExec')) is None:
         return False
     if not args.ignore_de:
         NotShowIn = entry.get('NotShowIn')
